@@ -1,0 +1,20 @@
+{
+  "movements": [
+    {
+      "source": "ARXIU COMARCAL D'OSONA/FONS/FAMILIA PRATDESABA DE VIC/SUBFONS/GRUP DE SERIE/SERIE/CONFERENCIAS DE JOSEP PRATDESABA/080019920000296",
+      "change_key_map": [
+        {
+          "key": "type",
+          "value": "TIFF"
+        }
+      ],
+      "transformation_rules": [
+        {
+          "type": "path_change",
+          "from": "ARXIU COMARCAL D'OSONA/",
+          "to": "ARXIU COMARCAL D'OSONA/{type}/ARXIU COMARCAL D'OSONA/"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "type": "extension",
+  "extensions": [{ "from": ".jpg", "to": ".png" }]
+}

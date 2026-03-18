@@ -1,0 +1,21 @@
+{
+  "dry_run": true,
+  "movements": [
+    {
+      "source": "src",
+      "change_key_map": [{ "key": "key1", "value": "value1" }],
+      "transformation_rules": [
+        { "type": "path_change", "from": "document.txt", "to": "document.md" }
+      ],
+      "filter_rules": [{ "type": "extension", "extensions": [".jpg", ".png"] }]
+    },
+    {
+      "source": "src2",
+      "change_key_map": [{ "key": "key2", "value": "value2" }],
+      "transformation_rules": [
+        { "type": "regex", "pattern": "(.*)\\.txt", "replacement": "$1.md" }
+      ],
+      "filter_rules": [{ "type": "regex", "pattern": ".*\\.(jpg|png)$" }]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "dry_run": true,
+  "movements": [
+    {
+      "source": "origin",
+      "destination": "dest/{filename}.png",
+      "change_key_map": [{ "key": "filename", "description": "nombre base" }],
+      "transformation_rules": [
+        {
+          "type": "path_change",
+          "from": "origin",
+          "to": "processed"
+        }
+      ],
+      "filter_rules": [
+        {
+          "type": "extension",
+          "extensions": [".jpg"]
+        }
+      ]
+    }
+  ]
+}

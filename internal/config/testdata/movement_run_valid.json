@@ -1,0 +1,26 @@
+{
+  "source": "origin",
+  "destination": "dest/{filename}.png",
+  "change_key_map": [{ "key": "filename", "description": "nombre base" }],
+  "transformation_rules": [
+    {
+      "type": "extension",
+      "extensions": [{ "from": ".jpg", "to": ".png" }]
+    },
+    {
+      "type": "path_change",
+      "from": "origin",
+      "to": "processed"
+    }
+  ],
+  "filter_rules": [
+    {
+      "type": "regex",
+      "pattern": ".*\\.jpg$"
+    },
+    {
+      "type": "extension",
+      "extensions": [".jpg", ".png"]
+    }
+  ]
+}
