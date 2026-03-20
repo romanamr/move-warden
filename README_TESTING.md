@@ -62,11 +62,12 @@ Esto verifica el parseo básico de flags y la generación de reglas de ejemplo.
 
 ## E2E por CLI
 
-Se incluye un runner E2E en Python para simular ejecuciones reales por CLI con 3 escenarios:
+Se incluye un runner E2E en Python para simular ejecuciones reales por CLI con 4 escenarios:
 
 1. archivo unico `.txt -> .md`,
 2. carpeta con 2 archivos `.txt -> .md`,
-3. reorganizacion recursiva por tipo (`JPG/TIFF/PDF`).
+3. reorganizacion recursiva por tipo (`JPG/TIFF/PDF`),
+4. combinacion del caso 2 y 3 en una sola ejecucion (JSON con dos `movements`).
 
 Comando:
 

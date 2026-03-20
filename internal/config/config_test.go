@@ -175,6 +175,48 @@ func TestMovementConfigurationUnmarshalJSON(t *testing.T) {
 	}
 }
 
+func TestMovementRunUnmarshalJSON_ReadsRecursiveField(t *testing.T) {
+	data := []byte(`{
+		"source": "origin/docs",
+		"recursive": true,
+		"transformation_rules": [],
+		"filter_rules": []
+	}`)
+
+	var run MovementRun
+	if err := json.Unmarshal(data, &run); err != nil {
+		t.Fatalf("json.Unmarshal devolvio error: %v", err)
+	}
+
+	if !run.Recursive {
+		t.Fatal("recursive deberia ser true tras parsear el JSON")
+	}
+}
+
+func TestMovementConfigurationUnmarshalJSON_ReadsDeleteEmptyDirectories(t *testing.T) {
+	data := []byte(`{
+		"dry_run": false,
+		"delete_empty_directories": true,
+		"movements": [
+			{
+				"source": "origin",
+				"recursive": false,
+				"transformation_rules": [],
+				"filter_rules": []
+			}
+		]
+	}`)
+
+	var cfg MovementConfiguration
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		t.Fatalf("json.Unmarshal devolvio error: %v", err)
+	}
+
+	if !cfg.DeleteEmptyDirectories {
+		t.Fatal("delete_empty_directories deberia ser true tras parsear el JSON")
+	}
+}
+
 func TestApplyInsertions(t *testing.T) {
 	run := MovementRun{}
 	got := run.applyInsertions("/dest/{filename}.{ext}", map[string]string{"filename": "image", "ext": "png"})

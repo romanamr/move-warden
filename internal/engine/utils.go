@@ -65,11 +65,15 @@ func loadFragment(path string) []Fragment {
 
 // A partir de una ruta recorremos de forma recursiva y si el directorio esta vacio lo eliminamos, y asi con cada directorio padre hasta llegar a la raiz o a un directorio que no este vacio
 func removeEmptyDirs(path string) error {
-	entries, err := os.ReadDir(path)
 	/// si path es un fichero y no un directorio, tomamos el directorio padre
 	if isFile(path) {
 		path = filepath.Dir(path)
 	}
+	// Si no existe el directorio, no hacemos nada
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return nil
+	}
+	entries, err := os.ReadDir(path)
 	if err != nil {
 		return err
 	}
@@ -131,8 +135,8 @@ func createDestDirIfNotExist(destination string) error {
 }
 
 func executeToFiles(path string, configMovement config.MovementRun,
-	fnDir func(string, config.MovementRun) error,
-	fnFile func(string, config.MovementRun) error) error {
+	fnDir MoveFunc,
+	fnFile MoveFunc) error {
 	files := getFiles(path)
 	for _, file := range files {
 		if file.IsDir() {
@@ -140,19 +144,40 @@ func executeToFiles(path string, configMovement config.MovementRun,
 				return err
 			}
 			if fnDir != nil {
-				if err := fnDir(filepath.Join(path, file.Name()), configMovement); err != nil {
+				if err := fnDir(filepath.Join(path, file.Name()), processDestination(filepath.Join(path, file.Name()), configMovement)); err != nil {
 					return err
 				}
 			}
 		} else {
 			if fnFile != nil {
-				if err := fnFile(filepath.Join(path, file.Name()), configMovement); err != nil {
+				if err := fnFile(filepath.Join(path, file.Name()), processDestination(filepath.Join(path, file.Name()), configMovement)); err != nil {
 					return err
 				}
 			}
 		}
 	}
 	return nil
+}
+
+func processDestination(src string, configMovement config.MovementRun) string {
+	mapping := getMappingVariables(src)
+	return configMovement.Process(src, mapping)
+}
+
+func getParentDirectory(path string) string {
+	//Primero comprobamos que no sea null o vacio
+	if path == "" {
+		return ""
+	}
+	// Ahora comprobamos que exista source
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return ""
+	}
+	// Comprobamos que no sea raiz de la unidad en linux / windows
+	if path == "/" || path == "\\" {
+		return ""
+	}
+	return filepath.Dir(path)
 }
 
 func CreateExampleRulesFile() error {

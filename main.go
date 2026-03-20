@@ -66,11 +66,13 @@ func main() {
 	err = engine.Run(cfg, appRunConfig, moveFunc)
 	if err != nil {
 		fmt.Println("Error: failed to run engine", err)
-		return
+		os.Exit(1)
 	}
 	if *collectMove {
 		fmt.Println("Move plans:", movePlans)
+		os.Exit(0)
 	}
+	os.Exit(0)
 }
 
 func createExampleRulesFile() {

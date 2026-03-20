@@ -21,13 +21,31 @@ Luego, al aplicar las reglas de transformación y filtrado, iríamos actualizand
 func Run(cfg config.MovementConfiguration, runconfig config.AppRunConfig, moveFunc MoveFunc) error {
 	// Aquí iría la lógica para ejecutar las reglas de transformación y filtrado
 	for _, movement := range cfg.Movements {
+		if cfg.DeleteEmptyDirectories {
+			// Primero sacamos el root del movimiento
+			cleanupRoot := getParentDirectory(movement.Source)
+			// Luego eliminamos los directorios vacíos
+			if cleanupRoot == "" {
+				continue
+			}
+			defer func() {
+				errc := removeEmptyDirs(cleanupRoot)
+				if errc != nil {
+					log.Printf("Error al eliminar directorios vacíos: %v", errc)
+				}
+			}()
+		}
 		err := runMovement(movement, moveFunc)
 		if err != nil {
 			return err
 		}
-		err = removeEmptyDirs(movement.Source)
-		if err != nil {
-			return err
+		// Si esta marcado remove_empty_directories, eliminamos los directorios vacíos
+		if !cfg.DeleteEmptyDirectories {
+			continue
+		}
+		errc := removeEmptyDirs(movement.Source)
+		if errc != nil {
+			return errc
 		}
 	}
 	return nil
@@ -48,45 +66,26 @@ func runMovement(movement config.MovementRun, moveFunc MoveFunc) error {
 
 func runDirectory(movement config.MovementRun, moveFunc MoveFunc) error {
 	if movement.Recursive {
-		return executeToFiles(movement.Source, movement, executeDirectory, executeFile)
+		// en caso de que sea un directorio volvera a llamar a runDirectory para cada fichero y subdirectorio asi que crearemos
+		return executeToFiles(movement.Source, movement, executeRunMovement(movement, moveFunc), executeRunFile(movement, moveFunc))
 	}
-	destination := movement.Process(movement.Source, getMappingVariables(movement.Source))
-	return moveFunc(movement.Source, destination)
+	return moveDirectory(movement.Source, movement, moveFunc)
 }
 
 func moveDirectory(source string, movement config.MovementRun, moveFunc MoveFunc) error {
-	log.Printf("Moviendo directorio %s con reglas de movimiento: %+v", source, movement)
-	destination := movement.Process(source, getMappingVariables(source))
-	if movement.Recursive {
-		log.Printf("El movimiento es recursivo, se moverán también los ficheros y subdirectorios dentro de %s", source)
+	destination := processDestination(source, movement)
+	// Si el destino es el mismo que el origen, no hacemos nada
+	if movement.Source == destination {
+		return nil
 	}
 	return moveFunc(source, destination)
 }
 
-func executeDirectory(str string, movement config.MovementRun) error {
-	// Aquí iría la lógica para ejecutar las reglas de transformación y filtrado de cada directorio, pero por ahora solo imprimimos lo que haríamos
-	log.Printf("Procesando directorio: %s", str)
-	configMovement := movement.Clone()
-	configMovement.Source = str
-	error := runDirectory(configMovement, ExecuteRealMove)
-	if error != nil {
-		return error
-	}
-	return nil
-}
-
-func executeFile(str string, movement config.MovementRun) error {
-	configMovement := movement
-	configMovement.Source = str
-	// Aquí iría la lógica para ejecutar las reglas de transformación y filtrado de cada fichero, pero por ahora solo imprimimos lo que haríamos
-	error := runFile(configMovement, ExecuteRealMove)
-	if error != nil {
-		return error
-	}
-	return nil
-}
-
 func runFile(movement config.MovementRun, moveFunc MoveFunc) error {
+	// Primero aplicamos filtros si los hay, si no es allowed, no hacemos nada
+	if !movement.AllowedByFilters(movement.Source) {
+		return nil
+	}
 	// Primero obtenemos el mapping de variables para la ruta origen
 	log.Printf("Procesando movimiento: %s", movement.Source)
 	mapping := getMappingVariables(movement.Source)
@@ -118,6 +117,23 @@ func ExecuteCollectMove(plans *[]MovePlan) MoveFunc {
 	return func(src, dst string) error {
 		*plans = append(*plans, MovePlan{Source: src, Destination: dst})
 		return nil
+	}
+}
+
+// Funcion que devuelve un MoveFunc para la ejecucion recursiva de un directorio
+func executeRunMovement(movement config.MovementRun, moveFunc MoveFunc) MoveFunc {
+	return func(src, dst string) error {
+		recMovement := movement.Clone()
+		recMovement.Source = src
+		return runMovement(recMovement, moveFunc)
+	}
+}
+
+func executeRunFile(movement config.MovementRun, moveFunc MoveFunc) MoveFunc {
+	return func(src, dst string) error {
+		recMovement := movement.Clone()
+		recMovement.Source = src
+		return runFile(recMovement, moveFunc)
 	}
 }
 

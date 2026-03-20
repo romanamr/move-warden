@@ -5,6 +5,7 @@ import (
 	"movewarden/internal/config"
 	"os"
 	"path/filepath"
+	"slices"
 	"testing"
 )
 
@@ -199,11 +200,11 @@ func TestExecuteToFiles_RecorreArbolYEjecutaCallbacks(t *testing.T) {
 	err := executeToFiles(
 		base,
 		config.MovementRun{},
-		func(_ string, _ config.MovementRun) error {
+		func(_ string, _ string) error {
 			dirsVisited++
 			return nil
 		},
-		func(_ string, _ config.MovementRun) error {
+		func(_ string, _ string) error {
 			filesVisited++
 			return nil
 		},
@@ -235,7 +236,7 @@ func TestExecuteToFiles_PropagaErrorDeCallback(t *testing.T) {
 		base,
 		config.MovementRun{},
 		nil,
-		func(_ string, _ config.MovementRun) error {
+		func(_ string, _ string) error {
 			return expectedErr
 		},
 	)
@@ -260,5 +261,202 @@ func TestCollectMove_AgregaPlan(t *testing.T) {
 
 	if plans[0].Source != "source.txt" || plans[0].Destination != "dest.txt" {
 		t.Fatalf("plan inesperado: %+v", plans[0])
+	}
+}
+
+func TestRun_FileSource_DeleteEmptyDirectoriesTrue_EliminaDirectorioPadre(t *testing.T) {
+	base := t.TempDir()
+	originDir := filepath.Join(base, "origin")
+	destDir := filepath.Join(base, "dest")
+	if err := os.MkdirAll(originDir, 0755); err != nil {
+		t.Fatalf("error creando originDir: %v", err)
+	}
+	source := filepath.Join(originDir, "file.txt")
+	if err := os.WriteFile(source, []byte("x"), 0644); err != nil {
+		t.Fatalf("error creando source: %v", err)
+	}
+
+	cfg := config.MovementConfiguration{
+		DeleteEmptyDirectories: true,
+		Movements: []config.MovementRun{
+			{
+				Source: source,
+				TransformationRules: []config.TransformationRule{
+					&config.TransformationRulePathChange{Type: "path_change", From: originDir, To: destDir},
+					&config.TransformationRuleExtension{
+						Type: "extension",
+						Extensions: []config.ExtensionDuo{{From: ".txt", To: ".md"}},
+					},
+				},
+			},
+		},
+	}
+
+	if err := Run(cfg, config.AppRunConfig{}, ExecuteRealMove); err != nil {
+		t.Fatalf("Run no deberia fallar: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(destDir, "file.md")); err != nil {
+		t.Fatalf("se esperaba fichero movido en destino: %v", err)
+	}
+	if _, err := os.Stat(originDir); !os.IsNotExist(err) {
+		t.Fatalf("se esperaba originDir eliminado por estar vacio")
+	}
+}
+
+func TestRun_FileSource_DeleteEmptyDirectoriesFalse_ConservaDirectorioPadre(t *testing.T) {
+	base := t.TempDir()
+	originDir := filepath.Join(base, "origin")
+	destDir := filepath.Join(base, "dest")
+	if err := os.MkdirAll(originDir, 0755); err != nil {
+		t.Fatalf("error creando originDir: %v", err)
+	}
+	source := filepath.Join(originDir, "file.txt")
+	if err := os.WriteFile(source, []byte("x"), 0644); err != nil {
+		t.Fatalf("error creando source: %v", err)
+	}
+
+	cfg := config.MovementConfiguration{
+		DeleteEmptyDirectories: false,
+		Movements: []config.MovementRun{
+			{
+				Source: source,
+				TransformationRules: []config.TransformationRule{
+					&config.TransformationRulePathChange{Type: "path_change", From: originDir, To: destDir},
+					&config.TransformationRuleExtension{
+						Type: "extension",
+						Extensions: []config.ExtensionDuo{{From: ".txt", To: ".md"}},
+					},
+				},
+			},
+		},
+	}
+
+	if err := Run(cfg, config.AppRunConfig{}, ExecuteRealMove); err != nil {
+		t.Fatalf("Run no deberia fallar: %v", err)
+	}
+
+	if _, err := os.Stat(filepath.Join(destDir, "file.md")); err != nil {
+		t.Fatalf("se esperaba fichero movido en destino: %v", err)
+	}
+	if info, err := os.Stat(originDir); err != nil || !info.IsDir() {
+		t.Fatalf("se esperaba originDir conservado cuando delete_empty_directories=false")
+	}
+}
+
+func TestRunDirectory_Recursive_Caso2_CambiaExtensionDeArchivos(t *testing.T) {
+	base := t.TempDir()
+	docs := filepath.Join(base, "docs")
+	if err := os.MkdirAll(docs, 0755); err != nil {
+		t.Fatalf("error creando docs: %v", err)
+	}
+	for _, name := range []string{"a.txt", "b.txt"} {
+		if err := os.WriteFile(filepath.Join(docs, name), []byte("x"), 0644); err != nil {
+			t.Fatalf("error creando %s: %v", name, err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(docs, "skip.pdf"), []byte("x"), 0644); err != nil {
+		t.Fatalf("error creando skip.pdf: %v", err)
+	}
+
+	plans := []MovePlan{}
+	movement := config.MovementRun{
+		Source:    docs,
+		Recursive: true,
+		TransformationRules: []config.TransformationRule{
+			&config.TransformationRuleExtension{
+				Type: "extension",
+				Extensions: []config.ExtensionDuo{{From: ".txt", To: ".md"}},
+			},
+		},
+		FilterRules: []config.FilterRule{
+			&config.FilterRuleExtension{Type: "extension", Extensions: []string{".txt"}},
+		},
+	}
+
+	if err := runDirectory(movement, ExecuteCollectMove(&plans)); err != nil {
+		t.Fatalf("runDirectory recursivo no deberia fallar: %v", err)
+	}
+
+	got := []string{}
+	for _, p := range plans {
+		got = append(got, p.Destination)
+	}
+	slices.Sort(got)
+
+	want := []string{
+		filepath.Join(docs, "a.md"),
+		filepath.Join(docs, "b.md"),
+	}
+	slices.Sort(want)
+
+	if len(got) != len(want) {
+		t.Fatalf("cantidad de planes inesperada: got=%d want=%d; plans=%+v", len(got), len(want), plans)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Fatalf("destino[%d] inesperado: got=%s want=%s", i, got[i], want[i])
+		}
+	}
+}
+
+func TestRunDirectory_Recursive_Caso3_ReordenaPorTipo(t *testing.T) {
+	base := t.TempDir()
+	algoRoot := filepath.Join(base, "Algo")
+	for _, branch := range []string{"algo", "algo2"} {
+		for _, typ := range []string{"JPG", "TIFF", "PDF"} {
+			dir := filepath.Join(algoRoot, branch, typ)
+			if err := os.MkdirAll(dir, 0755); err != nil {
+				t.Fatalf("error creando %s: %v", dir, err)
+			}
+			if err := os.WriteFile(filepath.Join(dir, "placeholder.txt"), []byte("x"), 0644); err != nil {
+				t.Fatalf("error creando placeholder en %s: %v", dir, err)
+			}
+		}
+	}
+
+	plans := []MovePlan{}
+	movement := config.MovementRun{
+		Source:    algoRoot,
+		Recursive: true,
+		ChangeKeyMap: []config.ChangeKey{
+			{Key: "algo2_name", Value: "Algo2"},
+		},
+		TransformationRules: []config.TransformationRule{
+			&config.TransformationRuleRegex{
+				Type:        "regex",
+				Pattern:     `(.*)/Algo/algo/(JPG|TIFF|PDF)(/.*)?$`,
+				Replacement: `${1}/Algo/${2}/Algo${3}`,
+			},
+			&config.TransformationRuleRegex{
+				Type:        "regex",
+				Pattern:     `(.*)/Algo/algo2/(JPG|TIFF|PDF)(/.*)?$`,
+				Replacement: `${1}/Algo/${2}/{algo2_name}${3}`,
+			},
+		},
+	}
+
+	if err := runDirectory(movement, ExecuteCollectMove(&plans)); err != nil {
+		t.Fatalf("runDirectory recursivo no deberia fallar: %v", err)
+	}
+
+	expected := map[string]bool{
+		filepath.Join(algoRoot, "JPG", "Algo", "placeholder.txt"):   false,
+		filepath.Join(algoRoot, "JPG", "Algo2", "placeholder.txt"):  false,
+		filepath.Join(algoRoot, "TIFF", "Algo", "placeholder.txt"):  false,
+		filepath.Join(algoRoot, "TIFF", "Algo2", "placeholder.txt"): false,
+		filepath.Join(algoRoot, "PDF", "Algo", "placeholder.txt"):   false,
+		filepath.Join(algoRoot, "PDF", "Algo2", "placeholder.txt"):  false,
+	}
+
+	for _, p := range plans {
+		if _, ok := expected[p.Destination]; ok {
+			expected[p.Destination] = true
+		}
+	}
+	for dst, seen := range expected {
+		if !seen {
+			t.Fatalf("no se encontro destino esperado en planes: %s; plans=%+v", dst, plans)
+		}
 	}
 }

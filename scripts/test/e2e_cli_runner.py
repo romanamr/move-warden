@@ -35,7 +35,18 @@ REPORT_PATH = ROOT / "e2e_report.md"
 REPORT_JSON_PATH = ROOT / "e2e_report.json"
 
 
+def cleanup_rogue_backref_dirs() -> None:
+    """Remove accidental dirs like '\\1', '\\2foo' created by bad regex replacements."""
+    for child in ROOT.iterdir():
+        name = child.name
+        if not child.is_dir():
+            continue
+        if len(name) >= 2 and name[0] == "\\" and name[1].isdigit():
+            shutil.rmtree(child, ignore_errors=True)
+
+
 def clean_and_prepare_dirs() -> None:
+    cleanup_rogue_backref_dirs()
     for target in (E2E_GENERATED, E2E_CONFIG):
         if target.exists():
             shutil.rmtree(target)
@@ -176,12 +187,12 @@ def build_case3() -> Path:
                     {
                         "type": "regex",
                         "pattern": r"(.*)/Algo/algo/(JPG|TIFF|PDF)(/.*)?$",
-                        "replacement": r"\1/Algo/\2/Algo\3",
+                        "replacement": r"$1/Algo/$2/Algo$3",
                     },
                     {
                         "type": "regex",
                         "pattern": r"(.*)/Algo/algo2/(JPG|TIFF|PDF)(/.*)?$",
-                        "replacement": r"\1/Algo/\2/{algo2_name}\3",
+                        "replacement": r"$1/Algo/$2/{algo2_name}$3",
                     },
                 ],
                 "filter_rules": [],
@@ -189,6 +200,57 @@ def build_case3() -> Path:
         ],
     }
     path = E2E_CONFIG / "case3_recursive_by_type.json"
+    write_json(path, config)
+    return path
+
+
+def build_case4() -> Path:
+    docs_root = E2E_GENERATED / "case4_combo" / "docs_block" / "docs"
+    docs_root.mkdir(parents=True, exist_ok=True)
+    (docs_root / "a.txt").write_text("a", encoding="utf-8")
+    (docs_root / "b.txt").write_text("b", encoding="utf-8")
+
+    algo_root = E2E_GENERATED / "case4_combo" / "algo_block" / "Algo"
+    for branch in ("algo", "algo2"):
+        for file_type in ("JPG", "TIFF", "PDF"):
+            src = algo_root / branch / file_type
+            src.mkdir(parents=True, exist_ok=True)
+            (src / "placeholder.txt").write_text("x", encoding="utf-8")
+
+    config = {
+        "dry_run": True,
+        "delete_empty_directories": False,
+        "movements": [
+            {
+                "source": str(docs_root),
+                "recursive": True,
+                "change_key_map": [],
+                "transformation_rules": [
+                    {"type": "extension", "extensions": [{"from": ".txt", "to": ".md"}]}
+                ],
+                "filter_rules": [{"type": "extension", "extensions": [".txt"]}],
+            },
+            {
+                "source": str(algo_root),
+                "recursive": True,
+                "change_key_map": [{"key": "algo2_name", "value": "Algo2"}],
+                "transformation_rules": [
+                    {
+                        "type": "regex",
+                        "pattern": r"(.*)/Algo/algo/(JPG|TIFF|PDF)(/.*)?$",
+                        "replacement": r"$1/Algo/$2/Algo$3",
+                    },
+                    {
+                        "type": "regex",
+                        "pattern": r"(.*)/Algo/algo2/(JPG|TIFF|PDF)(/.*)?$",
+                        "replacement": r"$1/Algo/$2/{algo2_name}$3",
+                    },
+                ],
+                "filter_rules": [],
+            },
+        ],
+    }
+    path = E2E_CONFIG / "case4_combo_case2_case3.json"
     write_json(path, config)
     return path
 
@@ -222,6 +284,28 @@ def verify_case3_real() -> tuple[bool, str]:
     ]
     ok = all(path.is_dir() for path in expected)
     return ok, "Deben existir rutas esperadas por tipo para Algo y Algo2."
+
+
+def verify_case4_real() -> tuple[bool, str]:
+    docs_dir = E2E_GENERATED / "case4_combo" / "docs_block" / "docs"
+    docs_ok = (
+        (docs_dir / "a.md").exists()
+        and (docs_dir / "b.md").exists()
+        and not (docs_dir / "a.txt").exists()
+        and not (docs_dir / "b.txt").exists()
+    )
+    algo_base = E2E_GENERATED / "case4_combo" / "algo_block" / "Algo"
+    algo_expected = [
+        algo_base / "JPG" / "Algo",
+        algo_base / "JPG" / "Algo2",
+        algo_base / "TIFF" / "Algo",
+        algo_base / "TIFF" / "Algo2",
+        algo_base / "PDF" / "Algo",
+        algo_base / "PDF" / "Algo2",
+    ]
+    algo_ok = all(path.is_dir() for path in algo_expected)
+    ok = docs_ok and algo_ok
+    return ok, "Caso combinado exige exito estricto de conversion de docs y reordenamiento por tipo."
 
 
 def evaluate_case(name: str, config_path: Path, verify_real_fn: Callable[[], tuple[bool, str]]) -> CaseResult:
@@ -307,10 +391,12 @@ def main() -> int:
     case1 = build_case1()
     case2 = build_case2()
     case3 = build_case3()
+    case4 = build_case4()
     results = [
         evaluate_case("Caso 1: archivo .txt -> .md", case1, verify_case1_real),
         evaluate_case("Caso 2: carpeta con 2 .txt -> .md", case2, verify_case2_real),
         evaluate_case("Caso 3: reorganizacion recursiva por tipo (JPG/TIFF/PDF)", case3, verify_case3_real),
+        evaluate_case("Caso 4: combinacion de caso 2 y caso 3", case4, verify_case4_real),
     ]
     write_report_md(results)
     write_report_json(results)

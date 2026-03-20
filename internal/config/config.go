@@ -35,7 +35,7 @@ type MovementRun struct {
 }
 type MovementRunAlias struct {
 	Source              string            `json:"source"`
-	Recursive           bool              `json:"recursive" default:"false"`
+	Recursive           bool              `json:"recursive" -:"false"`
 	ChangeKeyMap        []ChangeKey       `json:"change_key_map"`
 	TransformationRules []json.RawMessage `json:"transformation_rules"`
 	FilterRules         []json.RawMessage `json:"filter_rules"`
@@ -221,6 +221,7 @@ func (m *MovementRun) UnmarshalJSON(data []byte) error {
 	}
 	m.Source = aux.Source
 	m.ChangeKeyMap = aux.ChangeKeyMap
+	m.Recursive = aux.Recursive
 
 	for _, tr := range aux.TransformationRules {
 		rule, err := unmarshallTransformationRule(tr)
