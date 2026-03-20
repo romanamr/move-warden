@@ -69,7 +69,7 @@ func TestRunFile_DryRun_NoMueveFichero(t *testing.T) {
 		},
 	}
 
-	if err := runFile(movement, dryRunMove); err != nil {
+	if err := runFile(movement, ExecuteDryRunMove); err != nil {
 		t.Fatalf("no se esperaba error en dry_run: %v", err)
 	}
 
@@ -99,7 +99,7 @@ func TestRunFile_MueveFicheroCuandoNoEsDryRun(t *testing.T) {
 		},
 	}
 
-	if err := runFile(movement, realMove); err != nil {
+	if err := runFile(movement, ExecuteRealMove); err != nil {
 		t.Fatalf("no se esperaba error moviendo fichero: %v", err)
 	}
 
@@ -115,7 +115,7 @@ func TestRunFile_MueveFicheroCuandoNoEsDryRun(t *testing.T) {
 func TestRunMovement_ErrorSiSourceNoExiste(t *testing.T) {
 	movement := config.MovementRun{Source: filepath.Join(t.TempDir(), "no-existe.txt")}
 
-	err := runMovement(movement, realMove)
+	err := runMovement(movement, ExecuteRealMove)
 	if err == nil {
 		t.Fatal("se esperaba error cuando source no existe")
 	}
@@ -137,7 +137,7 @@ func TestRunMovement_RutaFichero_UsaRunFile(t *testing.T) {
 		},
 	}
 
-	if err := runMovement(movement, realMove); err != nil {
+	if err := runMovement(movement, ExecuteRealMove); err != nil {
 		t.Fatalf("runMovement no debería fallar para fichero válido: %v", err)
 	}
 
@@ -160,7 +160,7 @@ func TestMoveDirectory_DryRun_NoMueveDirectorio(t *testing.T) {
 		},
 	}
 
-	if err := moveDirectory(source, movement, dryRunMove); err != nil {
+	if err := moveDirectory(source, movement, ExecuteDryRunMove); err != nil {
 		t.Fatalf("no se esperaba error en dry_run: %v", err)
 	}
 
@@ -247,7 +247,7 @@ func TestExecuteToFiles_PropagaErrorDeCallback(t *testing.T) {
 
 func TestCollectMove_AgregaPlan(t *testing.T) {
 	plans := []MovePlan{}
-	moveFn := collectMove(&plans)
+	moveFn := ExecuteCollectMove(&plans)
 
 	err := moveFn("source.txt", "dest.txt")
 	if err != nil {

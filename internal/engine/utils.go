@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"encoding/json"
 	"io"
 	"log"
 	"movewarden/internal/config"
@@ -65,6 +66,10 @@ func loadFragment(path string) []Fragment {
 // A partir de una ruta recorremos de forma recursiva y si el directorio esta vacio lo eliminamos, y asi con cada directorio padre hasta llegar a la raiz o a un directorio que no este vacio
 func removeEmptyDirs(path string) error {
 	entries, err := os.ReadDir(path)
+	/// si path es un fichero y no un directorio, tomamos el directorio padre
+	if isFile(path) {
+		path = filepath.Dir(path)
+	}
 	if err != nil {
 		return err
 	}
@@ -83,6 +88,14 @@ func removeEmptyDirs(path string) error {
 	}
 
 	return nil
+}
+
+func isFile(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return !info.IsDir()
 }
 
 func isEmptyDir(dir string) bool {
@@ -140,4 +153,79 @@ func executeToFiles(path string, configMovement config.MovementRun,
 		}
 	}
 	return nil
+}
+
+func CreateExampleRulesFile() error {
+	movementConfiguration := config.MovementConfiguration{
+		DryRun:                 true,
+		DeleteEmptyDirectories: false,
+		Movements: []config.MovementRun{
+			{
+				Source:    "workspace/inbox/photos",
+				Recursive: true,
+				ChangeKeyMap: []config.ChangeKey{
+					{Key: "parent_dir", Value: "fotos"},
+				},
+				TransformationRules: []config.TransformationRule{
+					&config.TransformationRulePathChange{
+						Type: "path_change",
+						From: "workspace/inbox/photos",
+						To:   "workspace/library/{parent_dir}",
+					},
+					&config.TransformationRuleExtension{
+						Type: "extension",
+						Extensions: []config.ExtensionDuo{
+							{From: ".jpeg", To: ".jpg"},
+							{From: ".heic", To: ".jpg"},
+						},
+					},
+					&config.TransformationRuleRegex{
+						Type:        "regex",
+						Pattern:     " ",
+						Replacement: "_",
+					},
+				},
+				FilterRules: []config.FilterRule{
+					&config.FilterRuleExtension{
+						Type:       "extension",
+						Extensions: []string{".jpg", ".jpeg", ".png", ".heic"},
+					},
+				},
+			},
+			{
+				Source:       "workspace/inbox/docs",
+				Recursive:    true,
+				ChangeKeyMap: []config.ChangeKey{},
+				TransformationRules: []config.TransformationRule{
+					&config.TransformationRulePathChange{
+						Type: "path_change",
+						From: "workspace/inbox/docs",
+						To:   "workspace/library/docs",
+					},
+					&config.TransformationRuleExtension{
+						Type: "extension",
+						Extensions: []config.ExtensionDuo{
+							{From: ".txt", To: ".md"},
+						},
+					},
+				},
+				FilterRules: []config.FilterRule{
+					&config.FilterRuleExtension{
+						Type:       "extension",
+						Extensions: []string{".txt", ".md", ".pdf"},
+					},
+					&config.FilterRuleRegex{
+						Type:    "regex",
+						Pattern: ".*",
+					},
+				},
+			},
+		},
+	}
+
+	jsonData, err := json.MarshalIndent(movementConfiguration, "", "  ")
+	if err != nil {
+		log.Fatalf("Error marshaling movement configuration: %v", err)
+	}
+	return os.WriteFile("example_rules.json", jsonData, 0644)
 }

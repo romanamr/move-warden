@@ -68,7 +68,7 @@ func executeDirectory(str string, movement config.MovementRun) error {
 	log.Printf("Procesando directorio: %s", str)
 	configMovement := movement.Clone()
 	configMovement.Source = str
-	error := runDirectory(configMovement, realMove)
+	error := runDirectory(configMovement, ExecuteRealMove)
 	if error != nil {
 		return error
 	}
@@ -79,7 +79,7 @@ func executeFile(str string, movement config.MovementRun) error {
 	configMovement := movement
 	configMovement.Source = str
 	// Aquí iría la lógica para ejecutar las reglas de transformación y filtrado de cada fichero, pero por ahora solo imprimimos lo que haríamos
-	error := runFile(configMovement, realMove)
+	error := runFile(configMovement, ExecuteRealMove)
 	if error != nil {
 		return error
 	}
@@ -99,7 +99,7 @@ func runFile(movement config.MovementRun, moveFunc MoveFunc) error {
 }
 
 // Ejecutar de verdad
-func realMove(src, dst string) error {
+func ExecuteRealMove(src, dst string) error {
 	if err := createDestDirIfNotExist(dst); err != nil {
 		return err
 	}
@@ -107,14 +107,14 @@ func realMove(src, dst string) error {
 }
 
 // Dry run
-func dryRunMove(src, dst string) error {
+func ExecuteDryRunMove(src, dst string) error {
 	log.Printf("Dry run: %s → %s", src, dst)
 	return nil
 }
 
 // Colectar para TUI: closure que captura el slice.
 // Se usa en tests mientras se integra en el flujo de TUI.
-func collectMove(plans *[]MovePlan) MoveFunc {
+func ExecuteCollectMove(plans *[]MovePlan) MoveFunc {
 	return func(src, dst string) error {
 		*plans = append(*plans, MovePlan{Source: src, Destination: dst})
 		return nil

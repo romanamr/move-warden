@@ -1,0 +1,70 @@
+{
+  "results": [
+    {
+      "case_name": "Caso 1: archivo .txt -> .md",
+      "dry_run": {
+        "status": "FAIL",
+        "reason": "La app reporto error de ejecucion del motor.",
+        "command": "go run . --dry-run --rules /home/keroveros/Proyectos/move-warden/e2e_test_config/case1_single_file.json",
+        "returncode": 0,
+        "stdout": "Dry run: true\nRules: /home/keroveros/Proyectos/move-warden/e2e_test_config/case1_single_file.json\nRules: {true false [{/home/keroveros/Proyectos/move-warden/e2e_generated/case1_single_file/single.txt false [] [0x130340a228a0] []}]}\nError: failed to run engine open /home/keroveros/Proyectos/move-warden/e2e_generated/case1_single_file/single.txt: not a directory",
+        "stderr": "2026/03/20 13:14:05 Procesando movimiento: /home/keroveros/Proyectos/move-warden/e2e_generated/case1_single_file/single.txt\n2026/03/20 13:14:05 Mapping de variables: map[ext:txt filename:single fragment_0: fragment_1:home fragment_2:keroveros fragment_3:Proyectos fragment_4:move-warden fragment_5:e2e_generated fragment_6:case1_single_file fragment_7:single.txt fragment_init: fragment_last:single.txt parent_dir:case1_single_file]\n2026/03/20 13:14:05 Dry run: /home/keroveros/Proyectos/move-warden/e2e_generated/case1_single_file/single.txt \u2192 /home/keroveros/Proyectos/move-warden/e2e_generated/case1_single_file/single.md",
+        "skipped": false
+      },
+      "real_run": {
+        "status": "SKIPPED",
+        "reason": "Real-run omitido porque dry-run no paso.",
+        "command": "go run . --rules /home/keroveros/Proyectos/move-warden/e2e_test_config/case1_single_file.json",
+        "returncode": 0,
+        "stdout": "",
+        "stderr": "",
+        "skipped": true
+      },
+      "final_status": "FAIL_DRY"
+    },
+    {
+      "case_name": "Caso 2: carpeta con 2 .txt -> .md",
+      "dry_run": {
+        "status": "PASS",
+        "reason": "Dry-run ejecutado correctamente.",
+        "command": "go run . --dry-run --rules /home/keroveros/Proyectos/move-warden/e2e_test_config/case2_folder_two_files.json",
+        "returncode": 0,
+        "stdout": "Dry run: true\nRules: /home/keroveros/Proyectos/move-warden/e2e_test_config/case2_folder_two_files.json\nRules: {true false [{/home/keroveros/Proyectos/move-warden/e2e_generated/case2_folder_two_files/docs false [] [0xeca17ff4c90] [0xeca17ff5080]}]}",
+        "stderr": "2026/03/20 13:14:05 Dry run: /home/keroveros/Proyectos/move-warden/e2e_generated/case2_folder_two_files/docs \u2192 /home/keroveros/Proyectos/move-warden/e2e_generated/case2_folder_two_files/docs",
+        "skipped": false
+      },
+      "real_run": {
+        "status": "FAIL",
+        "reason": "La app reporto error de ejecucion del motor.",
+        "command": "go run . --rules /home/keroveros/Proyectos/move-warden/e2e_test_config/case2_folder_two_files.json",
+        "returncode": 0,
+        "stdout": "Dry run: false\nRules: /home/keroveros/Proyectos/move-warden/e2e_test_config/case2_folder_two_files.json\nRules: {true false [{/home/keroveros/Proyectos/move-warden/e2e_generated/case2_folder_two_files/docs false [] [0x3ea6523aacc0] [0x3ea6523ab0b0]}]}\nError: failed to run engine rename /home/keroveros/Proyectos/move-warden/e2e_generated/case2_folder_two_files/docs /home/keroveros/Proyectos/move-warden/e2e_generated/case2_folder_two_files/docs: file exists",
+        "stderr": "",
+        "skipped": false
+      },
+      "final_status": "FAIL_REAL"
+    },
+    {
+      "case_name": "Caso 3: reorganizacion recursiva por tipo (JPG/TIFF/PDF)",
+      "dry_run": {
+        "status": "PASS",
+        "reason": "Dry-run ejecutado correctamente.",
+        "command": "go run . --dry-run --rules /home/keroveros/Proyectos/move-warden/e2e_test_config/case3_recursive_by_type.json",
+        "returncode": 0,
+        "stdout": "Dry run: true\nRules: /home/keroveros/Proyectos/move-warden/e2e_test_config/case3_recursive_by_type.json\nRules: {true false [{/home/keroveros/Proyectos/move-warden/e2e_generated/case3_recursive_by_type/Algo false [{algo2_name Algo2}] [0x2d728a1e2cc0 0x2d728a1e2e40] []}]}",
+        "stderr": "2026/03/20 13:14:05 Dry run: /home/keroveros/Proyectos/move-warden/e2e_generated/case3_recursive_by_type/Algo \u2192 /home/keroveros/Proyectos/move-warden/e2e_generated/case3_recursive_by_type/Algo",
+        "skipped": false
+      },
+      "real_run": {
+        "status": "FAIL",
+        "reason": "La app reporto error de ejecucion del motor.",
+        "command": "go run . --rules /home/keroveros/Proyectos/move-warden/e2e_test_config/case3_recursive_by_type.json",
+        "returncode": 0,
+        "stdout": "Dry run: false\nRules: /home/keroveros/Proyectos/move-warden/e2e_test_config/case3_recursive_by_type.json\nRules: {true false [{/home/keroveros/Proyectos/move-warden/e2e_generated/case3_recursive_by_type/Algo false [{algo2_name Algo2}] [0x2648d42aacf0 0x2648d42aae70] []}]}\nError: failed to run engine rename /home/keroveros/Proyectos/move-warden/e2e_generated/case3_recursive_by_type/Algo /home/keroveros/Proyectos/move-warden/e2e_generated/case3_recursive_by_type/Algo: file exists",
+        "stderr": "",
+        "skipped": false
+      },
+      "final_status": "FAIL_REAL"
+    }
+  ]
+}

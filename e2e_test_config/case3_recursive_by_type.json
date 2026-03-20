@@ -1,0 +1,29 @@
+{
+  "dry_run": true,
+  "delete_empty_directories": false,
+  "movements": [
+    {
+      "source": "/home/keroveros/Proyectos/move-warden/e2e_generated/case3_recursive_by_type/Algo",
+      "recursive": true,
+      "change_key_map": [
+        {
+          "key": "algo2_name",
+          "value": "Algo2"
+        }
+      ],
+      "transformation_rules": [
+        {
+          "type": "regex",
+          "pattern": "(.*)/Algo/algo/(JPG|TIFF|PDF)(/.*)?$",
+          "replacement": "\\1/Algo/\\2/Algo\\3"
+        },
+        {
+          "type": "regex",
+          "pattern": "(.*)/Algo/algo2/(JPG|TIFF|PDF)(/.*)?$",
+          "replacement": "\\1/Algo/\\2/{algo2_name}\\3"
+        }
+      ],
+      "filter_rules": []
+    }
+  ]
+}

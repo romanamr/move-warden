@@ -1,0 +1,23 @@
+{
+  "dry_run": true,
+  "delete_empty_directories": false,
+  "movements": [
+    {
+      "source": "/home/keroveros/Proyectos/move-warden/e2e_generated/case1_single_file/single.txt",
+      "recursive": false,
+      "change_key_map": [],
+      "transformation_rules": [
+        {
+          "type": "extension",
+          "extensions": [
+            {
+              "from": ".txt",
+              "to": ".md"
+            }
+          ]
+        }
+      ],
+      "filter_rules": []
+    }
+  ]
+}
