@@ -284,7 +284,7 @@ func TestRun_FileSource_DeleteEmptyDirectoriesTrue_EliminaDirectorioPadre(t *tes
 				TransformationRules: []config.TransformationRule{
 					&config.TransformationRulePathChange{Type: "path_change", From: originDir, To: destDir},
 					&config.TransformationRuleExtension{
-						Type: "extension",
+						Type:       "extension",
 						Extensions: []config.ExtensionDuo{{From: ".txt", To: ".md"}},
 					},
 				},
@@ -324,7 +324,7 @@ func TestRun_FileSource_DeleteEmptyDirectoriesFalse_ConservaDirectorioPadre(t *t
 				TransformationRules: []config.TransformationRule{
 					&config.TransformationRulePathChange{Type: "path_change", From: originDir, To: destDir},
 					&config.TransformationRuleExtension{
-						Type: "extension",
+						Type:       "extension",
 						Extensions: []config.ExtensionDuo{{From: ".txt", To: ".md"}},
 					},
 				},
@@ -365,7 +365,7 @@ func TestRunDirectory_Recursive_Caso2_CambiaExtensionDeArchivos(t *testing.T) {
 		Recursive: true,
 		TransformationRules: []config.TransformationRule{
 			&config.TransformationRuleExtension{
-				Type: "extension",
+				Type:       "extension",
 				Extensions: []config.ExtensionDuo{{From: ".txt", To: ".md"}},
 			},
 		},

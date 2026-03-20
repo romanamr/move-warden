@@ -11,6 +11,10 @@
 *.sln.docstates
 *.env
 
+# Project-generated E2E reports
+e2e_report.md
+e2e_report.json
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
