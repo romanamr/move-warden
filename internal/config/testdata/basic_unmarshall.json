@@ -1,0 +1,13 @@
+{
+  "dry_run": true,
+  "movements": [
+    {
+      "source": "src",
+      "change_key_map": [{ "key": "key1", "value": "value1" }],
+      "transformation_rules": [
+        { "type": "path_change", "from": "document.txt", "to": "document.md" }
+      ],
+      "filter_rules": [{ "type": "extension", "extensions": [".jpg", ".png"] }]
+    }
+  ]
+}

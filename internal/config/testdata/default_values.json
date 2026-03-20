@@ -1,0 +1,13 @@
+{
+  "movements": [
+    {
+      "source": "src",
+      "destination": "dst",
+      "change_key_map": [{ "key": "key1", "value": "value1" }],
+      "transformation_rules": [
+        { "type": "path_change", "from": "document.txt", "to": "document.md" }
+      ],
+      "filter_rules": [{ "type": "extension", "extensions": [".jpg", ".png"] }]
+    }
+  ]
+}
