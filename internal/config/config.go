@@ -145,15 +145,18 @@ func (r *TransformationRuleRegex) Apply(source string) string {
 		log.Fatalf("Error compiling regex: %v", err)
 		return source
 	}
-	return re.ReplaceAllString(source, r.Replacement)
+	return filepath.FromSlash(re.ReplaceAllString(normalizePath(source), r.Replacement))
 }
 
 func (r *TransformationRulePathChange) Apply(source string) string {
+	normalizedPath := normalizePath(source)
+	normalizedFrom := normalizePath(r.From)
+	normalizedTo := normalizePath(r.To)
 	// Solo si contiene el from, se reemplaza por el to.
-	if !strings.Contains(source, r.From) {
+	if !strings.Contains(normalizedPath, normalizedFrom) {
 		return source
 	}
-	return strings.ReplaceAll(source, r.From, r.To)
+	return filepath.FromSlash(strings.ReplaceAll(normalizedPath, normalizedFrom, normalizedTo))
 }
 
 type ExtensionDuo struct {
@@ -166,7 +169,9 @@ func (r *TransformationRuleExtension) Apply(source string) string {
 	sourceExtension := strings.ToLower(filepath.Ext(source))
 	for _, extension := range r.Extensions {
 		if sourceExtension == extension.From {
-			return strings.Replace(source, sourceExtension, extension.To, 1)
+			normalizedSource := normalizePath(source)
+			normalizedTo := normalizePath(extension.To)
+			return filepath.FromSlash(strings.Replace(normalizedSource, sourceExtension, normalizedTo, 1))
 		}
 	}
 	return source
@@ -194,7 +199,7 @@ func (r *FilterRuleRegex) Allowed(fullSourcePath string) bool {
 		log.Fatalf("Error compiling regex: %v", err)
 		return false
 	}
-	return re.MatchString(fullSourcePath)
+	return re.MatchString(normalizePath(fullSourcePath))
 }
 
 // FilterRuleExtension es una regla que filtra los archivos por extension.

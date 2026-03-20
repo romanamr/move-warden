@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -39,10 +40,10 @@ func TestFilterRuleExtensionAllowed(t *testing.T) {
 
 func TestTransformationRulePathChangeApply(t *testing.T) {
 	rule := TransformationRulePathChange{From: "old", To: "new"}
-	if got := rule.Apply("/tmp/old/file.jpg"); got != "/tmp/new/file.jpg" {
+	if got := filepath.ToSlash(rule.Apply("/tmp/old/file.jpg")); got != "/tmp/new/file.jpg" {
 		t.Fatalf("resultado inesperado: %s", got)
 	}
-	if got := rule.Apply("/tmp/file.jpg"); got != "/tmp/file.jpg" {
+	if got := filepath.ToSlash(rule.Apply("/tmp/file.jpg")); got != "/tmp/file.jpg" {
 		t.Fatalf("no deberia cambiar cuando no contiene From: %s", got)
 	}
 }
@@ -232,7 +233,7 @@ func TestApplyTransformations(t *testing.T) {
 			&TransformationRuleExtension{Extensions: []ExtensionDuo{{From: ".jpg", To: ".png"}}},
 		},
 	}
-	if got := run.ApplyTransformations("origin/image.jpg"); got != "processed/image.png" {
+	if got := filepath.ToSlash(run.ApplyTransformations("origin/image.jpg")); got != "processed/image.png" {
 		t.Fatalf("resultado inesperado: %s", got)
 	}
 }
