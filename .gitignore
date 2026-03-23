@@ -432,3 +432,5 @@ custom_config/*
 
 # Executables generated locally
 *.exe
+movewarden.exe
+example_rules.json
