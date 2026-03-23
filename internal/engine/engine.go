@@ -90,7 +90,6 @@ func runFile(movement config.MovementRun, moveFunc MoveFunc) error {
 	log.Printf("Procesando movimiento: %s", movement.Source)
 	mapping := getMappingVariables(movement.Source)
 	// Luego aplicamos las reglas de transformación y filtrado en orden
-	log.Printf("Mapping de variables: %+v", mapping)
 	destination := movement.Process(movement.Source, mapping)
 
 	// Le solicitamos al sistema que mueva el fichero de origen a destino, pero si es dry_run entonces solo imprimimos lo que haríamos sin hacer nada realmente
@@ -102,7 +101,17 @@ func ExecuteRealMove(src, dst string) error {
 	if err := createDestDirIfNotExist(dst); err != nil {
 		return err
 	}
-	return os.Rename(src, dst)
+	// Ahora hay que validar que el destino no exista, si existe, hay que renombrarlo o eliminarlo según la configuración, pero para simplificar, vamos a asumir que no existe y si existe, se sobreescribe.
+	err := os.Rename(src, dst)
+	if err != nil {
+		//Validamos que el destino existe y si no existe es un error.
+		if os.IsNotExist(err) {
+			// Tenemos que crear el error de destino
+			return os.ErrNotExist
+		}
+	}
+
+	return err
 }
 
 // Dry run

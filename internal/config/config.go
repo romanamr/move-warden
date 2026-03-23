@@ -46,6 +46,14 @@ type ChangeKey struct {
 	Value string `json:"value"`
 }
 
+func (mc *MovementConfiguration) String() string {
+	data, err := json.MarshalIndent(mc, "", "  ")
+	if err != nil {
+		return ""
+	}
+	return string(data)
+}
+
 /*
 Las transformaciones:
 
