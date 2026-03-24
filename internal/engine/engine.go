@@ -91,7 +91,9 @@ func runFile(movement config.MovementRun, moveFunc MoveFunc) error {
 	mapping := getMappingVariables(movement.Source)
 	// Luego aplicamos las reglas de transformación y filtrado en orden
 	destination := movement.Process(movement.Source, mapping)
-
+	if movement.Source == destination {
+		return nil
+	}
 	// Le solicitamos al sistema que mueva el fichero de origen a destino, pero si es dry_run entonces solo imprimimos lo que haríamos sin hacer nada realmente
 	return moveFunc(movement.Source, destination)
 }
