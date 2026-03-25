@@ -460,3 +460,68 @@ func TestRunDirectory_Recursive_Caso3_ReordenaPorTipo(t *testing.T) {
 		}
 	}
 }
+
+func TestRunDirectory_Recursive_NormalizaCuatroDigitosTrasComa(t *testing.T) {
+	base := t.TempDir()
+	root := filepath.Join(base, "lote")
+	dir474 := filepath.Join(root, "080002320001474")
+	dir402 := filepath.Join(root, "080002320001402")
+
+	if err := os.MkdirAll(dir474, 0755); err != nil {
+		t.Fatalf("error creando directorio 1474: %v", err)
+	}
+	if err := os.MkdirAll(dir402, 0755); err != nil {
+		t.Fatalf("error creando directorio 1402: %v", err)
+	}
+
+	sourceAlready4 := filepath.Join(dir474, "080002320001474,0007.jpg")
+	source3Digits := filepath.Join(dir474, "080002320001474,007.jpg")
+	sourceManyZeros := filepath.Join(dir474, "080002320001474,0000000000000000000007.jpg")
+	source2Digits := filepath.Join(dir402, "080002320001402,10.jpg")
+
+	for _, f := range []string{sourceAlready4, source3Digits, sourceManyZeros, source2Digits} {
+		if err := os.WriteFile(f, []byte("x"), 0644); err != nil {
+			t.Fatalf("error creando fichero %s: %v", f, err)
+		}
+	}
+
+	plans := []MovePlan{}
+	movement := config.MovementRun{
+		Source:    root,
+		Recursive: true,
+		TransformationRules: []config.TransformationRule{
+			&config.TransformationRuleRegex{Type: "regex", Pattern: `(080002320001474|080002320001402),0*([0-9])(\.[^.]+)$`, Replacement: `$1,000$2$3`},
+			&config.TransformationRuleRegex{Type: "regex", Pattern: `(080002320001474|080002320001402),0*([0-9]{2})(\.[^.]+)$`, Replacement: `$1,00$2$3`},
+			&config.TransformationRuleRegex{Type: "regex", Pattern: `(080002320001474|080002320001402),0*([0-9]{3})(\.[^.]+)$`, Replacement: `$1,0$2$3`},
+			&config.TransformationRuleRegex{Type: "regex", Pattern: `(080002320001474|080002320001402),0*([0-9]{4})(\.[^.]+)$`, Replacement: `$1,$2$3`},
+		},
+	}
+
+	if err := runDirectory(movement, ExecuteCollectMove(&plans)); err != nil {
+		t.Fatalf("runDirectory recursivo no deberia fallar: %v", err)
+	}
+
+	gotBySource := map[string]string{}
+	for _, p := range plans {
+		gotBySource[p.Source] = p.Destination
+	}
+
+	if _, exists := gotBySource[sourceAlready4]; exists {
+		t.Fatalf("no deberia planear movimiento para archivo ya normalizado: %s", sourceAlready4)
+	}
+
+	want3Digits := filepath.Join(dir474, "080002320001474,0007.jpg")
+	if got := gotBySource[source3Digits]; got != want3Digits {
+		t.Fatalf("destino inesperado para source3Digits: got=%s want=%s", got, want3Digits)
+	}
+
+	wantManyZeros := filepath.Join(dir474, "080002320001474,0007.jpg")
+	if got := gotBySource[sourceManyZeros]; got != wantManyZeros {
+		t.Fatalf("destino inesperado para sourceManyZeros: got=%s want=%s", got, wantManyZeros)
+	}
+
+	want2Digits := filepath.Join(dir402, "080002320001402,0010.jpg")
+	if got := gotBySource[source2Digits]; got != want2Digits {
+		t.Fatalf("destino inesperado para source2Digits: got=%s want=%s", got, want2Digits)
+	}
+}

@@ -67,7 +67,7 @@ func runMovement(movement config.MovementRun, moveFunc MoveFunc) error {
 func runDirectory(movement config.MovementRun, moveFunc MoveFunc) error {
 	if movement.Recursive {
 		// en caso de que sea un directorio volvera a llamar a runDirectory para cada fichero y subdirectorio asi que crearemos
-		return executeToFiles(movement.Source, movement, executeRunMovement(movement, moveFunc), executeRunFile(movement, moveFunc))
+		return executeToFiles(movement.Source, movement, makeDirectoryMoveFunc(movement, moveFunc), makeFileMoveFunc(movement, moveFunc))
 	}
 	return moveDirectory(movement.Source, movement, moveFunc)
 }
@@ -132,15 +132,15 @@ func ExecuteCollectMove(plans *[]MovePlan) MoveFunc {
 }
 
 // Funcion que devuelve un MoveFunc para la ejecucion recursiva de un directorio
-func executeRunMovement(movement config.MovementRun, moveFunc MoveFunc) MoveFunc {
+func makeDirectoryMoveFunc(movement config.MovementRun, moveFunc MoveFunc) MoveFunc {
 	return func(src, dst string) error {
 		recMovement := movement.Clone()
 		recMovement.Source = src
-		return runMovement(recMovement, moveFunc)
+		return moveDirectory(src, recMovement, moveFunc)
 	}
 }
 
-func executeRunFile(movement config.MovementRun, moveFunc MoveFunc) MoveFunc {
+func makeFileMoveFunc(movement config.MovementRun, moveFunc MoveFunc) MoveFunc {
 	return func(src, dst string) error {
 		recMovement := movement.Clone()
 		recMovement.Source = src
