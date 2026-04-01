@@ -67,7 +67,7 @@ func runMovement(movement config.MovementRun, moveFunc MoveFunc) error {
 func runDirectory(movement config.MovementRun, moveFunc MoveFunc) error {
 	if movement.Recursive {
 		// en caso de que sea un directorio volvera a llamar a runDirectory para cada fichero y subdirectorio asi que crearemos
-		return executeToFiles(movement.Source, movement, executeRunMovement(movement, moveFunc), executeRunFile(movement, moveFunc))
+		return executeToFiles(movement.Source, movement, makeDirectoryMoveFunc(movement, moveFunc), makeFileMoveFunc(movement, moveFunc))
 	}
 	return moveDirectory(movement.Source, movement, moveFunc)
 }
@@ -87,12 +87,13 @@ func runFile(movement config.MovementRun, moveFunc MoveFunc) error {
 		return nil
 	}
 	// Primero obtenemos el mapping de variables para la ruta origen
-	log.Printf("Procesando movimiento: %s", movement.Source)
 	mapping := getMappingVariables(movement.Source)
 	// Luego aplicamos las reglas de transformación y filtrado en orden
-	log.Printf("Mapping de variables: %+v", mapping)
 	destination := movement.Process(movement.Source, mapping)
-
+	if samePath(movement.Source, destination) {
+		return nil
+	}
+	log.Printf("Procesando movimiento: %s", movement.Source)
 	// Le solicitamos al sistema que mueva el fichero de origen a destino, pero si es dry_run entonces solo imprimimos lo que haríamos sin hacer nada realmente
 	return moveFunc(movement.Source, destination)
 }
@@ -102,7 +103,17 @@ func ExecuteRealMove(src, dst string) error {
 	if err := createDestDirIfNotExist(dst); err != nil {
 		return err
 	}
-	return os.Rename(src, dst)
+	// Ahora hay que validar que el destino no exista, si existe, hay que renombrarlo o eliminarlo según la configuración, pero para simplificar, vamos a asumir que no existe y si existe, se sobreescribe.
+	err := os.Rename(src, dst)
+	if err != nil {
+		//Validamos que el destino existe y si no existe es un error.
+		if os.IsNotExist(err) {
+			// Tenemos que crear el error de destino
+			return os.ErrNotExist
+		}
+	}
+
+	return err
 }
 
 // Dry run
@@ -121,15 +132,15 @@ func ExecuteCollectMove(plans *[]MovePlan) MoveFunc {
 }
 
 // Funcion que devuelve un MoveFunc para la ejecucion recursiva de un directorio
-func executeRunMovement(movement config.MovementRun, moveFunc MoveFunc) MoveFunc {
+func makeDirectoryMoveFunc(movement config.MovementRun, moveFunc MoveFunc) MoveFunc {
 	return func(src, dst string) error {
 		recMovement := movement.Clone()
 		recMovement.Source = src
-		return runMovement(recMovement, moveFunc)
+		return moveDirectory(src, recMovement, moveFunc)
 	}
 }
 
-func executeRunFile(movement config.MovementRun, moveFunc MoveFunc) MoveFunc {
+func makeFileMoveFunc(movement config.MovementRun, moveFunc MoveFunc) MoveFunc {
 	return func(src, dst string) error {
 		recMovement := movement.Clone()
 		recMovement.Source = src

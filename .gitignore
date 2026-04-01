@@ -15,6 +15,13 @@
 e2e_report.md
 e2e_report.json
 
+# Project build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+movewarden
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
@@ -198,6 +205,9 @@ DocProject/Help/html
 
 # Click-Once directory
 publish/
+
+# Archivo sensible no versionable
+Guia_desarrollo.md
 
 # Publish Web Output
 *.[Pp]ublish.xml
@@ -402,7 +412,6 @@ FodyWeavers.xsd
 
 # VS Code files for those working on multiple tools
 .vscode/*
-!.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
@@ -422,4 +431,16 @@ FodyWeavers.xsd
 *.msp
 
 # E2E artifacts
-e2e_generated/
+e2e_generated  
+
+# Vscode configurations
+.vscode/*
+!.vscode/launch.json
+
+# custom configurations
+custom_config/*
+
+# Executables generated locally
+*.exe
+movewarden.exe
+example_rules.json

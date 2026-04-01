@@ -46,7 +46,10 @@ func main() {
 		return
 	}
 
-	fmt.Println("Rules:", cfg)
+	fmt.Printf("Configuración de movimientos cargada correctamente: %d movimiento(s) encontrado(s) dryrun: %v\n, delete_empty_directories: %v\n", len(cfg.Movements), *dryRun, cfg.DeleteEmptyDirectories)
+	for i, m := range cfg.Movements {
+		fmt.Printf("  [%d] %s\n", i, m.Source)
+	}
 
 	appRunConfig := config.AppRunConfig{
 		DryRun:   *dryRun,

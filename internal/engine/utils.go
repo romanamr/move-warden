@@ -7,6 +7,7 @@ import (
 	"movewarden/internal/config"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -253,4 +254,13 @@ func CreateExampleRulesFile() error {
 		log.Fatalf("Error marshaling movement configuration: %v", err)
 	}
 	return os.WriteFile("example_rules.json", jsonData, 0644)
+}
+
+func samePath(a, b string) bool {
+	na := filepath.Clean(filepath.FromSlash(a))
+	nb := filepath.Clean(filepath.FromSlash(b))
+	if runtime.GOOS == "windows" {
+		return strings.EqualFold(na, nb)
+	}
+	return na == nb
 }

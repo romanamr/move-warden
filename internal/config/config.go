@@ -28,14 +28,14 @@ type MovementConfigurationAlias struct {
 
 type MovementRun struct {
 	Source              string               `json:"source"`
-	Recursive           bool                 `json:"recursive" default:"false"`
+	Recursive           bool                 `json:"recursive" default:"true"`
 	ChangeKeyMap        []ChangeKey          `json:"change_key_map"`
 	TransformationRules []TransformationRule `json:"transformation_rules"`
 	FilterRules         []FilterRule         `json:"filter_rules"`
 }
 type MovementRunAlias struct {
 	Source              string            `json:"source"`
-	Recursive           bool              `json:"recursive" -:"false"`
+	Recursive           bool              `json:"recursive" default:"true"`
 	ChangeKeyMap        []ChangeKey       `json:"change_key_map"`
 	TransformationRules []json.RawMessage `json:"transformation_rules"`
 	FilterRules         []json.RawMessage `json:"filter_rules"`
@@ -44,6 +44,14 @@ type MovementRunAlias struct {
 type ChangeKey struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
+}
+
+func (mc *MovementConfiguration) String() string {
+	data, err := json.MarshalIndent(mc, "", "  ")
+	if err != nil {
+		return ""
+	}
+	return string(data)
 }
 
 /*
