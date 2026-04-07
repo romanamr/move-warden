@@ -78,6 +78,13 @@ func moveDirectory(source string, movement config.MovementRun, moveFunc MoveFunc
 	if movement.Source == destination {
 		return nil
 	}
+	// Si el destino ya existe y el origen está vacío (porque ya movimos los ficheros),
+	// simplemente eliminamos el directorio vacío en lugar de intentar renombrarlo.
+	if _, err := os.Stat(destination); err == nil {
+		if isEmptyDir(source) {
+			return os.Remove(source)
+		}
+	}
 	return moveFunc(source, destination)
 }
 
