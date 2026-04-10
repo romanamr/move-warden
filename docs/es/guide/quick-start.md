@@ -24,6 +24,16 @@ go run . --rules rules.json
 go run . --dry-run --rules rules.json
 ```
 
+## Bloque corto: filtro `contains`
+
+```json
+"filter_rules": [
+	{ "type": "contains", "text": ["/docs/"] }
+]
+```
+
+Permite solo archivos cuya ruta contiene `/docs/`.
+
 ## Alternativa con Makefile
 
 ```bash
