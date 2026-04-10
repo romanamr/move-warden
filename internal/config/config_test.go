@@ -68,6 +68,19 @@ func TestFilterRuleRegexAllowed(t *testing.T) {
 	}
 }
 
+func TestFilterRuleContainsAllowed(t *testing.T) {
+	rule := FilterRuleContains{Text: []string{"/docs/", "manual"}}
+	if !rule.Allowed("origin/docs/guia.txt") {
+		t.Fatal("deberia permitir ruta que contiene uno de los textos")
+	}
+	if !rule.Allowed("origin/manual_de_usuario.pdf") {
+		t.Fatal("deberia permitir ruta que contiene manual")
+	}
+	if rule.Allowed("origin/images/photo.jpg") {
+		t.Fatal("no deberia permitir ruta sin coincidencias")
+	}
+}
+
 func TestUnmarshallTransformationRule(t *testing.T) {
 	data := readFixture(t, "transformation_extension.json")
 	rule, err := unmarshallTransformationRule(data)
@@ -96,6 +109,15 @@ func TestUnmarshallFilterRule(t *testing.T) {
 	}
 	if _, ok := rule.(*FilterRuleRegex); !ok {
 		t.Fatalf("tipo inesperado para filter rule")
+	}
+
+	dataContains := readFixture(t, "filter_contains.json")
+	containsRule, err := unmarshallFilterRule(dataContains)
+	if err != nil {
+		t.Fatalf("error inesperado para contains: %v", err)
+	}
+	if _, ok := containsRule.(*FilterRuleContains); !ok {
+		t.Fatalf("tipo inesperado para filter rule contains")
 	}
 
 	dataUnknown := readFixture(t, "filter_unknown.json")
@@ -127,6 +149,11 @@ func TestUnmarshallerFunctions(t *testing.T) {
 	filterExtData := readFixture(t, "filter_extension.json")
 	if _, err := extensionFilterTransformation(filterExtData); err != nil {
 		t.Fatalf("extensionFilterTransformation devolvio error: %v", err)
+	}
+
+	filterContainsData := readFixture(t, "filter_contains.json")
+	if _, err := filterRuleContainsTransformation(filterContainsData); err != nil {
+		t.Fatalf("filterRuleContainsTransformation devolvio error: %v", err)
 	}
 }
 
@@ -235,5 +262,26 @@ func TestApplyTransformations(t *testing.T) {
 	}
 	if got := filepath.ToSlash(run.ApplyTransformations("origin/image.jpg")); got != "processed/image.png" {
 		t.Fatalf("resultado inesperado: %s", got)
+	}
+}
+
+func TestMovementRunAllowedByFilters_WithContains(t *testing.T) {
+	run := MovementRun{
+		FilterRules: []FilterRule{
+			&FilterRuleContains{Text: []string{"/docs/"}},
+			&FilterRuleExtension{Extensions: []string{".md"}},
+		},
+	}
+
+	if !run.AllowedByFilters("origin/docs/guia.md") {
+		t.Fatal("deberia permitir archivo que cumple contains y extension")
+	}
+
+	if run.AllowedByFilters("origin/images/foto.md") {
+		t.Fatal("no deberia permitir archivo que no cumple contains")
+	}
+
+	if run.AllowedByFilters("origin/docs/guia.txt") {
+		t.Fatal("no deberia permitir archivo que no cumple extension")
 	}
 }

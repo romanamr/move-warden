@@ -1,0 +1,62 @@
+# Ejemplos
+
+## Ejemplo 1: Fotos
+
+```json
+{
+  "source": "workspace/inbox/photos",
+  "recursive": true,
+  "change_key_map": [
+    { "key": "parent_dir", "value": "fotos" }
+  ],
+  "transformation_rules": [
+    {
+      "type": "path_change",
+      "from": "workspace/inbox/photos",
+      "to": "workspace/library/{parent_dir}"
+    },
+    {
+      "type": "extension",
+      "extensions": [
+        { "from": ".jpeg", "to": ".jpg" },
+        { "from": ".heic", "to": ".jpg" }
+      ]
+    },
+    { "type": "regex", "pattern": " ", "replacement": "_" }
+  ],
+  "filter_rules": [
+    {
+      "type": "extension",
+      "extensions": [".jpg", ".jpeg", ".png", ".heic"]
+    }
+  ]
+}
+```
+
+## Ejemplo 2: Documentos
+
+```json
+{
+  "source": "workspace/inbox/docs",
+  "recursive": true,
+  "change_key_map": [],
+  "transformation_rules": [
+    {
+      "type": "path_change",
+      "from": "workspace/inbox/docs",
+      "to": "workspace/library/docs"
+    },
+    {
+      "type": "extension",
+      "extensions": [{ "from": ".txt", "to": ".md" }]
+    }
+  ],
+  "filter_rules": [
+    { "type": "extension", "extensions": [".txt", ".md", ".pdf"] },
+    { "type": "regex", "pattern": ".*" },
+    { "type": "contains", "text": ["/docs/"] }
+  ]
+}
+```
+
+Referencia completa en `example_rules.json` del repositorio.
