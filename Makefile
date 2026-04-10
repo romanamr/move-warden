@@ -1,4 +1,4 @@
-.PHONY: help run run-dry run-example-rules build test test-race test-cover fmt vet lint check e2e clean
+.PHONY: help run run-dry run-example-rules build test test-race test-cover fmt vet lint check e2e docs-dev docs-build clean
 
 GO ?= go
 APP_NAME ?= movewarden
@@ -18,6 +18,8 @@ help:
 	@echo "  make lint                - Ejecuta golangci-lint (si esta instalado)"
 	@echo "  make check               - Ejecuta fmt + vet + test"
 	@echo "  make e2e                 - Ejecuta test unitarios y luego E2E CLI"
+	@echo "  make docs-dev            - Levanta VitePress en modo desarrollo"
+	@echo "  make docs-build          - Genera build estatico de VitePress"
 	@echo "  make clean               - Limpia artefactos de build/testing"
 
 run:
@@ -56,6 +58,12 @@ check: fmt vet test
 
 e2e: test
 	python3 scripts/test/e2e_cli_runner.py
+
+docs-dev:
+	cd docs && npm run dev
+
+docs-build:
+	cd docs && npm run build
 
 clean:
 	rm -rf bin cover.out

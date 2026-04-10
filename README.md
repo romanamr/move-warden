@@ -2,6 +2,19 @@
 
 Herramienta CLI en Go para definir y ejecutar reglas de movimiento/renombrado de archivos y rutas mediante configuración JSON.
 
+## Documentación web (VitePress)
+
+- Español: `docs/es/`
+- English: `docs/en/`
+
+Para levantarla en local:
+
+```bash
+cd docs
+npm install
+npm run dev
+```
+
 ## Estado actual
 
 - La entrada principal está en `main.go`.
@@ -31,13 +44,13 @@ Este comando genera `example_rules.json` con una configuración realista de refe
 - ejemplo de renombrado por regex (espacios a `_`),
 - movimiento de documentos (`workspace/inbox/docs` -> `workspace/library/docs`).
 
-2. Ejecutar usando reglas:
+1. Ejecutar usando reglas:
 
 ```bash
 go run . --rules rules.json
 ```
 
-3. Ejecutar en modo simulación:
+1. Ejecutar en modo simulación:
 
 ```bash
 go run . --dry-run --rules rules.json
