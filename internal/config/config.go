@@ -227,6 +227,21 @@ func (r *FilterRuleExtension) Allowed(fullSourcePath string) bool {
 	return slices.Contains(r.Extensions, extension)
 }
 
+type FilterRuleContains struct {
+	Type string   `json:"type"`
+	Text []string `json:"text"`
+}
+
+func (r *FilterRuleContains) Allowed(fullSourcePath string) bool {
+	normalizedPath := normalizePath(fullSourcePath)
+	for _, text := range r.Text {
+		if strings.Contains(normalizedPath, text) {
+			return true
+		}
+	}
+	return false
+}
+
 func (m *MovementRun) UnmarshalJSON(data []byte) error {
 	var aux MovementRunAlias
 	if err := json.Unmarshal(data, &aux); err != nil {
@@ -306,6 +321,7 @@ func regexTransformation(data []byte) (TransformationRule, error) {
 var filterRuleUnmarshallers = map[string]func(data []byte) (FilterRule, error){
 	"regex":     regexFilterTransformation,
 	"extension": extensionFilterTransformation,
+	"contains":  filterRuleContainsTransformation,
 }
 
 func unmarshallFilterRule(data []byte) (FilterRule, error) {
@@ -323,6 +339,14 @@ func unmarshallFilterRule(data []byte) (FilterRule, error) {
 
 func regexFilterTransformation(data []byte) (FilterRule, error) {
 	var rule FilterRuleRegex
+	if err := json.Unmarshal(data, &rule); err != nil {
+		return nil, err
+	}
+	return &rule, nil
+}
+
+func filterRuleContainsTransformation(data []byte) (FilterRule, error) {
+	var rule FilterRuleContains
 	if err := json.Unmarshal(data, &rule); err != nil {
 		return nil, err
 	}

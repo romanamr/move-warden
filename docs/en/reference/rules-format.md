@@ -27,6 +27,6 @@ Root structure:
 ## Supported types
 
 - Transformations: `path_change`, `extension`, `regex`
-- Filters: `extension`, `regex`
+- Filters: `extension`, `regex`, `contains`
 
 See [Examples](./examples) for complete templates.

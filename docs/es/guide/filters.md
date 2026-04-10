@@ -24,6 +24,17 @@ Permite solo rutas que cumplen el patrón.
 }
 ```
 
+## `contains`
+
+Permite solo rutas que contienen al menos uno de los textos indicados en `text`.
+
+```json
+{
+  "type": "contains",
+  "text": ["/docs/", "manual"]
+}
+```
+
 ## Nota
 
 Si una regla falla, el archivo queda fuera del movimiento.

@@ -24,6 +24,17 @@ Allows only paths matching the regex pattern.
 }
 ```
 
+## `contains`
+
+Allows only paths that contain at least one value from `text`.
+
+```json
+{
+  "type": "contains",
+  "text": ["/docs/", "manual"]
+}
+```
+
 ## Note
 
 If one rule fails, the file is excluded from movement.

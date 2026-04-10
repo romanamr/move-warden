@@ -27,6 +27,6 @@ Estructura raíz:
 ## Tipos soportados
 
 - Transformaciones: `path_change`, `extension`, `regex`
-- Filtros: `extension`, `regex`
+- Filtros: `extension`, `regex`, `contains`
 
 Consulta [Ejemplos](./examples) para plantillas completas.

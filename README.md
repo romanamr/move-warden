@@ -91,6 +91,7 @@ Tipos de regla soportados:
 - filtro:
   - `extension`
   - `regex`
+  - `contains`
 
 ## Uso con Makefile
 

@@ -53,7 +53,8 @@
   ],
   "filter_rules": [
     { "type": "extension", "extensions": [".txt", ".md", ".pdf"] },
-    { "type": "regex", "pattern": ".*" }
+    { "type": "regex", "pattern": ".*" },
+    { "type": "contains", "text": ["/docs/"] }
   ]
 }
 ```
