@@ -4,6 +4,7 @@ on:
     push:
         branches:
             - main
+    workflow_dispatch:
 
 permissions:
     contents: read
@@ -22,22 +23,22 @@ jobs:
             - uses: actions/setup-node@v4
               with:
                   node-version: 20
-                  cache: "npm"
-                  cache-dependency-path: [package-lock.json](http://_vscodecontentref_/7)
+                  cache: npm
+                  cache-dependency-path: docs/package-lock.json
             - run: npm ci
               working-directory: docs
-            - run: npm run docs:build
+            - run: npm run build
               working-directory: docs
             - uses: actions/upload-pages-artifact@v3
               with:
-                  path: [dist](http://_vscodecontentref_/8)
+                  path: docs/.vitepress/dist
 
     deploy:
         needs: build
         environment:
-            name: "github-pages"
-            url: ${{ steps.deploy-pages.outputs.page_url }}
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
         runs-on: ubuntu-latest
         steps:
             - id: deployment
-              uses: actions/download-pages@v4
+              uses: actions/deploy-pages@v4
